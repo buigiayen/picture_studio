@@ -1,0 +1,52 @@
+name: studio-anh
+
+services:
+  web:
+    image: ghcr.io/buigiayen/studio-anh-web:${TAG:-latest}
+    container_name: studio-anh-web
+    ports:
+      - "${WEB_PORT:-3001}:3000"
+    environment:
+      - ALLOWED_DOMAINS=${ALLOWED_DOMAINS:-localhost}
+      - PORTRAIT_GRPC_URL=http://envoy:8080
+      - PORTRAIT_GRPC_TRANSPORT=grpc-web
+      - PORTRAIT_GRPC_TOKEN=${PORTRAIT_GRPC_TOKEN:-}
+      - PORTRAIT_GRPC_TIMEOUT_MS=${PORTRAIT_GRPC_TIMEOUT_MS:-60000}
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      - envoy
+    restart: unless-stopped
+
+  envoy:
+    image: envoyproxy/envoy:v1.32.13
+    container_name: studio-anh-envoy
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    depends_on:
+      - portrait
+    restart: unless-stopped
+
+  portrait:
+    image: ghcr.io/buigiayen/portrait-service:${TAG:-latest}
+    container_name: studio-anh-portrait
+    environment:
+      - PORTRAIT_HOST=0.0.0.0
+      - PORTRAIT_PORT=50051
+      - LOCAL_SEGMENTATION_ENABLED=${LOCAL_SEGMENTATION_ENABLED:-true}
+      - LOCAL_SEGMENTATION_MODEL=${LOCAL_SEGMENTATION_MODEL:-isnet-general-use}
+      - AI_PROVIDERS_ORDER=${AI_PROVIDERS_ORDER:-remove.bg,clipdrop}
+      - AI_TIMEOUT_SECONDS=${AI_TIMEOUT_SECONDS:-60}
+      - AI_REMOVEBG_API_KEY=${AI_REMOVEBG_API_KEY:-}
+      - AI_CLIPDROP_API_KEY=${AI_CLIPDROP_API_KEY:-}
+      - MAX_DIMENSION_LIMIT=${MAX_DIMENSION_LIMIT:-4096}
+      - ALPHA_FEATHER=${ALPHA_FEATHER:-2}
+      - JPEG_QUALITY=${JPEG_QUALITY:-90}
+      - BEAUTY_STRENGTH=${BEAUTY_STRENGTH:-35}
+      - GRPC_MAX_MESSAGE_SIZE=${GRPC_MAX_MESSAGE_SIZE:-67108864}
+    volumes:
+      - rembg-models:/models
+    restart: unless-stopped
+
+volumes:
+  rembg-models:
