@@ -9,7 +9,7 @@ WORKDIR /app
 
 # ---------- Install dependencies (cached layer) ----------
 FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 # ---------- Build the Next.js app ----------

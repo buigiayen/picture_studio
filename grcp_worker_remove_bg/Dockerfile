@@ -20,7 +20,7 @@ COPY proto proto
 COPY server server
 COPY client client
 COPY scripts scripts
-COPY Makefile ./
+COPY Makefile .env.example ./
 
 RUN bash scripts/gen_proto.sh
 
