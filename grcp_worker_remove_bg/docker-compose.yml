@@ -1,0 +1,24 @@
+services:
+  portrait:
+    build: .
+    image: portrait-service:latest
+    container_name: portrait-service
+    ports:
+      - "50051:50051"
+    environment:
+      PORTRAIT_PORT: "50051"
+      LOCAL_SEGMENTATION_ENABLED: ${LOCAL_SEGMENTATION_ENABLED:-true}
+      LOCAL_SEGMENTATION_MODEL: ${LOCAL_SEGMENTATION_MODEL:-isnet-general-use}
+      AI_PROVIDERS_ORDER: ${AI_PROVIDERS_ORDER:-remove.bg,clipdrop}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-60}
+      AI_REMOVEBG_API_KEY: ${AI_REMOVEBG_API_KEY:-}
+      AI_CLIPDROP_API_KEY: ${AI_CLIPDROP_API_KEY:-}
+      MAX_DIMENSION_LIMIT: ${MAX_DIMENSION_LIMIT:-4096}
+      BEAUTY_STRENGTH: ${BEAUTY_STRENGTH:-35}
+      GRPC_MAX_MESSAGE_SIZE: ${GRPC_MAX_MESSAGE_SIZE:-67108864}
+    volumes:
+      - rembg-models:/models
+    restart: unless-stopped
+
+volumes:
+  rembg-models:
