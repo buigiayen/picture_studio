@@ -1,11 +1,9 @@
-name: studio-anh
-
 services:
   web:
     build:
-      context: .
+      context: ./web_picture_studio
       dockerfile: Dockerfile
-    container_name: studio-anh-web
+    container_name: studio-picture-web
     ports:
       - "3001:3000"
     environment:
@@ -22,7 +20,7 @@ services:
 
   envoy:
     image: ${ENVOY_IMAGE:-envoyproxy/envoy:v1.32.13}
-    container_name: studio-anh-envoy
+    container_name: studio-picture-envoy
     volumes:
       - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
     depends_on:
@@ -30,11 +28,11 @@ services:
     restart: unless-stopped
 
   portrait:
-    build:
-      context: ../take_picture_orn
-      dockerfile: Dockerfile
+    build: ./grcp_worker_remove_bg
     image: portrait-service:latest
-    container_name: studio-anh-portrait
+    container_name: portrait-service
+    ports:
+      - "50051:50051"
     environment:
       - PORTRAIT_HOST=0.0.0.0
       - PORTRAIT_PORT=50051
@@ -52,6 +50,7 @@ services:
     volumes:
       - rembg-models:/models
     restart: unless-stopped
+
 
 volumes:
   rembg-models:
