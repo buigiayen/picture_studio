@@ -1,0 +1,52 @@
+# ===================== OS / Editor =====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Desktop.ini
+
+# ===================== Secrets / Environment =====================
+.env
+.env.*
+!.env.example
+
+# ===================== Python — grcp_worker_remove_bg =====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# ===================== Node / Next.js — web_picture_studio =====================
+# NOTE: web_picture_studio/build/ (build plugin sources) and web_picture_studio/dist/
+# (Cloudflare deploy output) are intentionally tracked — do not ignore them here.
+node_modules/
+.npm/
+.npm-cache/
+.pnpm-store/
+.next/
+out/
+.wrangler/
+.open-next/
+*.tsbuildinfo
+.vercel/
+.netlify/
+.yarn/
+.pnp.*
+
+# ===================== Logs =====================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

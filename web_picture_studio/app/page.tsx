@@ -12,7 +12,26 @@ type BackgroundResult = { provider:string; latencyMs:number; width:number; heigh
 type Settings = { brightness:number; contrast:number; saturation:number; blur:number; grayscale:number };
 const DEFAULT: Settings = { brightness:100, contrast:100, saturation:100, blur:0, grayscale:0 };
 const filterString = (s:Settings) => `brightness(${s.brightness}%) contrast(${s.contrast}%) saturate(${s.saturation}%) blur(${s.blur}px) grayscale(${s.grayscale}%)`;
-const MAX_DIM = 6000;
+const DESKTOP_MAX_DIM = 6000;
+const MOBILE_MAX_DIM = 4096;
+const MOBILE_MAX_PIXELS = 12_000_000;
+const isCompactDevice = () => window.matchMedia("(max-width: 700px), (pointer: coarse)").matches;
+
+const imageDimensions = (width:number,height:number) => {
+  const compact=isCompactDevice();
+  const maxDimension=compact?MOBILE_MAX_DIM:DESKTOP_MAX_DIM;
+  const dimensionScale=maxDimension/Math.max(width,height);
+  const pixelScale=compact?Math.sqrt(MOBILE_MAX_PIXELS/(width*height)):1;
+  const scale=Math.min(1,dimensionScale,pixelScale);
+  return {w:Math.max(1,Math.round(width*scale)),h:Math.max(1,Math.round(height*scale))};
+};
+
+const decodeImage = (source:string) => new Promise<HTMLImageElement>((resolve,reject) => {
+  const image=new Image();
+  image.onload=()=>resolve(image);
+  image.onerror=()=>reject(new Error("Trình duyệt không đọc được định dạng ảnh này."));
+  image.src=source;
+});
 
 export default function Home() {
   const baseRef = useRef<HTMLCanvasElement | null>(null);
@@ -65,16 +84,17 @@ export default function Home() {
     context.filter="none";
   },[settings,dimensions,revision]);
 
-  const pushHistory = useCallback((source?:HTMLCanvasElement) => { const snapshot=source??baseRef.current; if (snapshot) { historyRef.current.push(snapshot.toDataURL("image/png")); if(historyRef.current.length>12) historyRef.current.shift(); setHistorySize(historyRef.current.length); } },[]);
+  const pushHistory = useCallback((source?:HTMLCanvasElement) => { const snapshot=source??baseRef.current; if (snapshot) { historyRef.current.push(snapshot.toDataURL("image/png")); const limit=isCompactDevice()?4:12; if(historyRef.current.length>limit) historyRef.current.splice(0,historyRef.current.length-limit); setHistorySize(historyRef.current.length); } },[]);
   const loadBitmap = useCallback(async (blob:Blob,name:string,resetWorkspace=true) => {
-    if (!blob.type.startsWith("image/") || blob.type === "image/svg+xml") throw new Error("Hãy chọn ảnh PNG, JPEG, WebP, GIF hoặc AVIF.");
+    if ((blob.type && !blob.type.startsWith("image/")) || blob.type === "image/svg+xml" || /\.svg$/i.test(name)) throw new Error("Hãy chọn ảnh PNG, JPEG, WebP, GIF, HEIC hoặc AVIF.");
     const objectURL=URL.createObjectURL(blob);
     try {
-      const img=new Image(); img.src=objectURL; await img.decode();
-      const factor=Math.min(1, MAX_DIM/Math.max(img.naturalWidth,img.naturalHeight));
-      const w=Math.max(1,Math.round(img.naturalWidth*factor)), h=Math.max(1,Math.round(img.naturalHeight*factor));
+      const img=await decodeImage(objectURL);
+      const {w,h}=imageDimensions(img.naturalWidth,img.naturalHeight);
       const base=document.createElement("canvas"); base.width=w; base.height=h;
-      base.getContext("2d")!.drawImage(img,0,0,w,h);
+      const context=base.getContext("2d");
+      if(!context) throw new Error("Thiết bị không thể tạo vùng chỉnh sửa ảnh.");
+      context.drawImage(img,0,0,w,h);
       baseRef.current=base;
       if(resetWorkspace) { historyRef.current=[]; setHistorySize(0); setBackgroundResult(null); setZoom(100); }
       setDimensions({w,h}); setFilename(name); setSettings(DEFAULT); setCrop(null); setTool(resetWorkspace?"adjust":"background"); setRevision(v=>v+1); setError("");
@@ -128,7 +148,7 @@ export default function Home() {
     const snapshot=historyRef.current.pop(); if(!snapshot) return;
     setBackgroundResult(null);
     setHistorySize(historyRef.current.length);
-    const img=new Image(); img.src=snapshot; await img.decode();
+    const img=await decodeImage(snapshot);
     const c=document.createElement("canvas"); c.width=img.width; c.height=img.height; c.getContext("2d")!.drawImage(img,0,0);
     baseRef.current=c; setSettings(DEFAULT); setDimensions({w:c.width,h:c.height}); setCrop(null); setRevision(v=>v+1);
   };
@@ -271,6 +291,6 @@ export default function Home() {
       </aside>
     </div>
     <footer className="statusbar"><span>{dimensions?`${dimensions.w} × ${dimensions.h} px · ${filename}`:"Chưa có ảnh trong vùng làm việc"}</span><span><MousePointer2 size={12} style={{display:"inline",verticalAlign:"middle"}}/> {backgroundBusy?"Đang chờ dịch vụ gRPC":tool==="background"?"Sẵn sàng khử nền":tool==="crop"?"Kéo để chọn vùng":tool==="brush"?"Kéo để vẽ":tool==="text"?"Nhấp để đặt chữ":"Sẵn sàng chỉnh sửa"}</span></footer>
-    <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/bmp" hidden onChange={e=>void openFile(e.target.files?.[0])}/>
+    <input ref={fileRef} type="file" accept="image/*" hidden onChange={e=>void openFile(e.target.files?.[0])}/>
   </main>;
 }
