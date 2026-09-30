@@ -8,7 +8,7 @@ class CompositeError(Exception):
 
 
 class Compositor:
-    def __init__(self, alpha_feather=2, jpeg_quality=90):
+    def __init__(self, alpha_feather=0, jpeg_quality=90):
         self.alpha_feather = alpha_feather
         self.jpeg_quality = jpeg_quality
 
@@ -42,6 +42,7 @@ class Compositor:
         alpha = img.getchannel("A")
         if self.alpha_feather and self.alpha_feather > 0:
             alpha = alpha.filter(ImageFilter.GaussianBlur(self.alpha_feather))
+            img.putalpha(alpha)
 
         r, g, b, a = color
         background = Image.new("RGBA", img.size, (r, g, b, a))

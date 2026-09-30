@@ -26,7 +26,7 @@ class PortraitService(portrait_pb2_grpc.PortraitServiceServicer):
                 request.background_color.red,
                 request.background_color.green,
                 request.background_color.blue,
-                request.background_color.alpha or 255,
+                0 if request.transparent_background else (request.background_color.alpha or 255),
             )
             for channel in color:
                 if not 0 <= channel <= 255:

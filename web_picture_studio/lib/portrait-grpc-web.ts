@@ -8,6 +8,7 @@ export type ChangeBackgroundInput = {
   maxDimension: number;
   sharpness: number;
   beautyStrength?: number;
+  transparentBackground?: boolean;
 };
 
 export type ChangeBackgroundOutput = {
@@ -85,6 +86,7 @@ export function encodeChangeBackground(input: ChangeBackgroundInput) {
     fieldVarint(6, input.sharpness),
   ];
   if (input.beautyStrength !== undefined) fields.push(fieldVarint(7, input.beautyStrength));
+  if (input.transparentBackground) fields.push(fieldVarint(8, 1));
   return concat(fields);
 }
 

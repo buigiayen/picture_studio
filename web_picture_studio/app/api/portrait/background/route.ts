@@ -127,6 +127,7 @@ export async function POST(request: NextRequest) {
       maxDimension: integerValue(form, "maxDimension", 0, 0, 6000),
       sharpness: integerValue(form, "sharpness", 0, 0, 100),
       beautyStrength: beautyStrength ? integerValue(form, "beautyStrength", 0, 0, 100) : undefined,
+      transparentBackground: transparent,
     };
     const options = {
       token: process.env.PORTRAIT_GRPC_TOKEN?.trim(),

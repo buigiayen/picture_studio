@@ -29,6 +29,8 @@ message ChangeBackgroundRequest {
   int32 max_dimension = 5;
   int32 sharpness = 6;
   optional int32 beauty_strength = 7;
+  // Explicit flag keeps old clients' omitted Color.alpha opaque.
+  bool transparent_background = 8;
 }
 
 message ChangeBackgroundResponse {

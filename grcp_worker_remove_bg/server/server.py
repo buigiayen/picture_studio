@@ -6,12 +6,26 @@ from server.compositor import Compositor
 from server.config import Config
 from server.gen import portrait_pb2_grpc
 from server.handlers import PortraitService
+from server.models.birefnet_lite import REVISION
 from server.segmentation.registry import SegmenterRegistry
 
 
 def serve():
     config = Config()
     registry = SegmenterRegistry.from_config(config)
+    if config.onnx_enabled and config.onnx_model_warmup:
+        try:
+            providers = registry.providers[0].warmup()
+            print("ONNX model ready: %s revision=%s providers=%s" % (
+                registry.providers[0].name,
+                REVISION,
+                ",".join(providers),
+            ))
+        except Exception as exc:
+            print("ONNX warmup failed; falling back to other configured providers: %s" % exc)
+            registry.providers.pop(0)
+            if not registry.providers:
+                raise RuntimeError("no segmentation provider is available") from exc
     compositor = Compositor(alpha_feather=config.alpha_feather, jpeg_quality=config.jpeg_quality)
 
     server = grpc.server(

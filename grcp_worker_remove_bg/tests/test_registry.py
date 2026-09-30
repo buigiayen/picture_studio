@@ -1,5 +1,6 @@
 from server.segmentation.base import SegmenterError
 from server.segmentation.registry import SegmenterRegistry
+from server.config import Config
 
 
 class FakeSegmenter:
@@ -57,3 +58,8 @@ def test_registry_raises_when_empty():
 def test_registry_names():
     registry = SegmenterRegistry([FakeSegmenter("a"), FakeSegmenter("b")])
     assert registry.names == ["fake:a", "fake:b"]
+
+
+def test_registry_prefers_onnx_then_local_without_external_provider():
+    registry = SegmenterRegistry.from_config(Config(env={}))
+    assert registry.names == ["local:birefnet-lite-fp32", "local:rembg"]

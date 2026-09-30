@@ -1,4 +1,4 @@
-from server.segmentation.base import BaseSegmenter, SegmenterUnavailable
+from server.segmentation.base import BaseSegmenter, SegmenterFailed, SegmenterUnavailable
 
 
 class LocalSegmenter(BaseSegmenter):
@@ -22,7 +22,10 @@ class LocalSegmenter(BaseSegmenter):
 
     def remove_background(self, image_bytes):
         session = self._load_session()
-        from rembg import remove
+        try:
+            from rembg import remove
 
-        data = remove(image_bytes, session=session)
-        return self.validate_png_bytes(data)
+            data = remove(image_bytes, session=session)
+            return self.validate_png_bytes(data)
+        except Exception as exc:
+            raise SegmenterFailed(self.name, str(exc)) from exc

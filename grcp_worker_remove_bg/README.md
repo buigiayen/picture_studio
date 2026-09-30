@@ -1,7 +1,7 @@
 # Portrait Background Changer (gRPC)
 
-Chuyển đổi ảnh chân dung sang ảnh nền màu mong muốn qua **gRPC**.
-Đầu vào: 1 ảnh + mã màu nền. Đầu ra: ảnh đã tách nền và ghép vào màu nền mới.
+Xóa nền ảnh bằng **BiRefNet lite ONNX** qua gRPC. Đầu ra là PNG nền trong suốt
+hoặc ảnh ghép lên màu nền được chọn. Pipeline không cần nhận diện hay đếm người.
 
 ## Kiến trúc
 
@@ -11,18 +11,20 @@ Chuyển đổi ảnh chân dung sang ảnh nền màu mong muốn qua **gRPC**.
                     │     │                                                            │
                     │     ▼                                                            │
                     │  SegmenterRegistry (fallback theo thứ tự)                        │
-                    │     ├─▶ local:rembg        (U2Net/ISNet, chạy local, KHÔNG cần key)│
-                    │     ├─▶ ai:remove.bg       (nếu AI_REMOVEBG_API_KEY có)           │
-                    │     └─▶ ai:clipdrop        (nếu AI_CLIPDROP_API_KEY có)           │
+                    │     ├─▶ local:birefnet-lite-fp32 (ONNX, mặc định)                 │
+                    │     ├─▶ local:rembg (ISNet, fallback)                            │
+                    │     └─▶ external providers (chỉ khi cấu hình)                   │
                     │     ▼                                                            │
                     │  Compositor — hoà alpha, ghép lên màu nền, xuất PNG/JPEG          │
                     └───────────▶ image đã đổi nền (bytes) ────────────────────────────┘
 ```
 
-Nguyên lý fallback: thử `local:rembg` trước (rẻ, nội bộ); nếu thiếu model/import lỗi thì
-tự động chuyển sang các AI provider cấu hình. Dùng `provider_used` trong response để biết
-provider nào được dùng. Mỗi provider kế thừa `BaseSegmenter` (server/segmentation/base.py) —
-chỉ cần cài thêm class mới là mở rộng được.
+BiRefNet lite xử lý ảnh RGB 1024×1024 theo `preprocessor_config.json` của model,
+chuyển logits thành alpha mềm và resize mask về kích thước gốc. Không threshold
+mask để giữ chi tiết tóc/viền. Nếu ONNX không tải/chạy được, registry dùng ISNet
+local; API ngoài chỉ được gọi khi đặt `AI_PROVIDERS_ORDER`. Response trả
+`provider_used` để biết model thực tế. Ảnh nền trong suốt dùng
+`transparent_background=true`; client cũ không gửi cờ này vẫn nhận nền đục.
 
 ## Cấu trúc thư mục
 
@@ -35,10 +37,12 @@ server/
   compositor.py                    # ghép chủ thể lên màu nền + làm mượt alpha
   segmentation/
     base.py                        # BaseSegmenter + exception
-    local.py                       # rembg (local deep-learning)
+    birefnet_onnx.py              # tiền/hậu xử lý + inference BiRefNet lite
+    local.py                       # rembg/ISNet fallback
     registry.py                    # danh sách provider + fallback
     providers/{removebg,clipdrop}.py
   gen/                             # code protobuf sinh tự động
+  models/birefnet_lite.py         # revision, SHA256, cache model
 client/client.py                   # CLI client demo
 scripts/{gen_proto,dev,demo}.sh
 tests/                             # pytest (không cần network/model)
@@ -48,10 +52,17 @@ tests/                             # pytest (không cần network/model)
 
 ```bash
 make setup                  # tạo .venv + cài requirements
-cp .env.example .env        # điền AI key (tuỳ chọn, local rembg không cần)
+cp .env.example .env        # cấu hình ONNX, không cần API key
 ```
 
-> Lần đầu chạy local, rembg tự tải model (~170MB) vào `~/.u2net`.
+Lần chạy đầu, worker tải `onnx-community/BiRefNet_lite-ONNX` FP32 (~224 MB)
+vào `~/.cache/picture_studio/models` khi chạy local hoặc `/models` trong Docker.
+File được pin ở revision `de15b22ba131738a16dff04aab8bdf8dc32e3ac1`,
+kiểm tra SHA256 trước khi load và tái sử dụng sau restart. Cần mạng ở lần tải
+đầu; sau đó inference chạy local. FP32 là mặc định cho CPU. FP16 (~115 MB) là
+tùy chọn cho runtime/provider hỗ trợ.
+Model và cấu hình tiền xử lý: https://huggingface.co/onnx-community/BiRefNet_lite-ONNX
+(MIT).
 
 ## Chạy
 
@@ -79,13 +90,18 @@ make test                   # gen proto + pytest (compositor, registry, config)
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
 | `PORTRAIT_HOST/PORT` | `0.0.0.0:50051` | địa chỉ server |
-| `LOCAL_SEGMENTATION_ENABLED` | `true` | bật/tắt segmenter local |
-| `LOCAL_SEGMENTATION_MODEL` | `isnet-general-use` | model rembg (vd `u2net`) |
-| `AI_PROVIDERS_ORDER` | `remove.bg,clipdrop` | thứ tự fallback |
+| `ONNX_SEGMENTATION_ENABLED` | `true` | bật BiRefNet lite ONNX |
+| `ONNX_MODEL_DTYPE` | `fp32` | `fp32` (CPU) hoặc `fp16` |
+| `ONNX_MODEL_CACHE_DIR` | `~/.cache/picture_studio/models` | thư mục cache persistent; Docker dùng `/models` |
+| `ONNX_EXECUTION_PROVIDERS` | `CPUExecutionProvider` | danh sách provider ONNX Runtime, ngăn cách bằng dấu phẩy |
+| `ONNX_MODEL_WARMUP` | `true` | tải/load và chạy warmup khi khởi động |
+| `LOCAL_SEGMENTATION_ENABLED` | `true` | bật rembg/ISNet fallback |
+| `LOCAL_SEGMENTATION_MODEL` | `isnet-general-use` | model rembg fallback |
+| `AI_PROVIDERS_ORDER` | trống | API fallback tùy chọn (`remove.bg,clipdrop`) |
 | `AI_REMOVEBG_API_KEY` | trống | key remove.bg (https://remove.bg) |
 | `AI_CLIPDROP_API_KEY` | trống | key ClipDrop (https://clipdrop.co) |
 | `MAX_DIMENSION_LIMIT` | `4096` | giới hạn cạnh dài nhất |
-| `ALPHA_FEATHER` | `2` | làm mượt viền (giảm nhiễu viền) |
+| `ALPHA_FEATHER` | `0` | làm mờ alpha sau inference nếu cần; mặc định giữ viền gốc |
 | `BEAUTY_STRENGTH` | `35` | làm sáng da và giảm mụn mặc định (`0..100`, `0` để tắt) |
 
 ## Ví dụ gọi bằng grpc (proto hoàn chỉnh)
@@ -114,7 +130,8 @@ make docker-up               # docker compose up -d --build (port 50051)
 make docker-logs             # xem log
 ```
 
-Model rembg lần đầu tự tải (~170MB) vào volume `rembg-models` (giữ lại khi restart).
+Model ONNX và rembg dùng volume `rembg-models` hiện có (giữ lại khi restart).
+Chạy `cp ../.env.example ../.env` nếu muốn đổi cấu hình Compose.
 Client gọi trực tiếp từ máy host:
 
 ```bash

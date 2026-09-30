@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eportrait.proto\x12\x08portrait\"\x07\n\x05\x45mpty\"\x17\n\x04Pong\x12\x0f\n\x07message\x18\x01 \x01(\t\"@\n\x05\x43olor\x12\x0b\n\x03red\x18\x01 \x01(\x05\x12\r\n\x05green\x18\x02 \x01(\x05\x12\x0c\n\x04\x62lue\x18\x03 \x01(\x05\x12\r\n\x05\x61lpha\x18\x04 \x01(\x05\"\xda\x01\n\x17\x43hangeBackgroundRequest\x12\r\n\x05image\x18\x01 \x01(\x0c\x12)\n\x10\x62\x61\x63kground_color\x18\x02 \x01(\x0b\x32\x0f.portrait.Color\x12\x12\n\nimage_name\x18\x03 \x01(\t\x12\x15\n\routput_format\x18\x04 \x01(\t\x12\x15\n\rmax_dimension\x18\x05 \x01(\x05\x12\x11\n\tsharpness\x18\x06 \x01(\x05\x12\x1c\n\x0f\x62\x65\x61uty_strength\x18\x07 \x01(\x05H\x00\x88\x01\x01\x42\x12\n\x10_beauty_strength\"\x9e\x01\n\x18\x43hangeBackgroundResponse\x12\r\n\x05image\x18\x01 \x01(\x0c\x12\x12\n\nimage_name\x18\x02 \x01(\t\x12\x15\n\routput_format\x18\x03 \x01(\t\x12\x15\n\rprovider_used\x18\x04 \x01(\t\x12\x12\n\nlatency_ms\x18\x05 \x01(\x01\x12\r\n\x05width\x18\x06 \x01(\x05\x12\x0e\n\x06height\x18\x07 \x01(\x05\"!\n\x0cProviderList\x12\x11\n\tproviders\x18\x01 \x03(\t2\xce\x01\n\x0fPortraitService\x12Y\n\x10\x43hangeBackground\x12!.portrait.ChangeBackgroundRequest\x1a\".portrait.ChangeBackgroundResponse\x12\'\n\x04Ping\x12\x0f.portrait.Empty\x1a\x0e.portrait.Pong\x12\x37\n\x0cGetProviders\x12\x0f.portrait.Empty\x1a\x16.portrait.ProviderListb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eportrait.proto\x12\x08portrait\"\x07\n\x05\x45mpty\"\x17\n\x04Pong\x12\x0f\n\x07message\x18\x01 \x01(\t\"@\n\x05\x43olor\x12\x0b\n\x03red\x18\x01 \x01(\x05\x12\r\n\x05green\x18\x02 \x01(\x05\x12\x0c\n\x04\x62lue\x18\x03 \x01(\x05\x12\r\n\x05\x61lpha\x18\x04 \x01(\x05\"\xfa\x01\n\x17\x43hangeBackgroundRequest\x12\r\n\x05image\x18\x01 \x01(\x0c\x12)\n\x10\x62\x61\x63kground_color\x18\x02 \x01(\x0b\x32\x0f.portrait.Color\x12\x12\n\nimage_name\x18\x03 \x01(\t\x12\x15\n\routput_format\x18\x04 \x01(\t\x12\x15\n\rmax_dimension\x18\x05 \x01(\x05\x12\x11\n\tsharpness\x18\x06 \x01(\x05\x12\x1c\n\x0f\x62\x65\x61uty_strength\x18\x07 \x01(\x05H\x00\x88\x01\x01\x12\x1e\n\x16transparent_background\x18\x08 \x01(\x08\x42\x12\n\x10_beauty_strength\"\x9e\x01\n\x18\x43hangeBackgroundResponse\x12\r\n\x05image\x18\x01 \x01(\x0c\x12\x12\n\nimage_name\x18\x02 \x01(\t\x12\x15\n\routput_format\x18\x03 \x01(\t\x12\x15\n\rprovider_used\x18\x04 \x01(\t\x12\x12\n\nlatency_ms\x18\x05 \x01(\x01\x12\r\n\x05width\x18\x06 \x01(\x05\x12\x0e\n\x06height\x18\x07 \x01(\x05\"!\n\x0cProviderList\x12\x11\n\tproviders\x18\x01 \x03(\t2\xce\x01\n\x0fPortraitService\x12Y\n\x10\x43hangeBackground\x12!.portrait.ChangeBackgroundRequest\x1a\".portrait.ChangeBackgroundResponse\x12\'\n\x04Ping\x12\x0f.portrait.Empty\x1a\x0e.portrait.Pong\x12\x37\n\x0cGetProviders\x12\x0f.portrait.Empty\x1a\x16.portrait.ProviderListb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -38,11 +38,11 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_COLOR']._serialized_start=62
   _globals['_COLOR']._serialized_end=126
   _globals['_CHANGEBACKGROUNDREQUEST']._serialized_start=129
-  _globals['_CHANGEBACKGROUNDREQUEST']._serialized_end=347
-  _globals['_CHANGEBACKGROUNDRESPONSE']._serialized_start=350
-  _globals['_CHANGEBACKGROUNDRESPONSE']._serialized_end=508
-  _globals['_PROVIDERLIST']._serialized_start=510
-  _globals['_PROVIDERLIST']._serialized_end=543
-  _globals['_PORTRAITSERVICE']._serialized_start=546
-  _globals['_PORTRAITSERVICE']._serialized_end=752
+  _globals['_CHANGEBACKGROUNDREQUEST']._serialized_end=379
+  _globals['_CHANGEBACKGROUNDRESPONSE']._serialized_start=382
+  _globals['_CHANGEBACKGROUNDRESPONSE']._serialized_end=540
+  _globals['_PROVIDERLIST']._serialized_start=542
+  _globals['_PROVIDERLIST']._serialized_end=575
+  _globals['_PORTRAITSERVICE']._serialized_start=578
+  _globals['_PORTRAITSERVICE']._serialized_end=784
 # @@protoc_insertion_point(module_scope)

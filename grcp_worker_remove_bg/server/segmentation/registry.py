@@ -1,4 +1,5 @@
 from server.segmentation.base import SegmenterError
+from server.segmentation.birefnet_onnx import BiRefNetOnnxSegmenter
 from server.segmentation.local import LocalSegmenter
 from server.segmentation.providers.clipdrop import ClipDropSegmenter
 from server.segmentation.providers.removebg import RemoveBgSegmenter
@@ -29,6 +30,10 @@ class SegmenterRegistry:
         env = cfg.env
         providers = []
 
+        if cfg.onnx_enabled:
+            providers.append(BiRefNetOnnxSegmenter(
+                cfg.onnx_model_cache_dir, cfg.onnx_model_dtype, cfg.onnx_execution_providers
+            ))
         if cfg.local_enabled:
             providers.append(LocalSegmenter(cfg.local_model))
 

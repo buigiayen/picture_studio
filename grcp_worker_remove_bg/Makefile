@@ -22,13 +22,13 @@ docker-build:
 	docker build -t portrait-service .
 
 docker-up:
-	docker compose up -d --build
+	docker compose -f ../docker-compose.yaml up -d --build
 
 docker-down:
-	docker compose down
+	docker compose -f ../docker-compose.yaml down
 
 docker-logs:
-	docker compose logs -f
+	docker compose -f ../docker-compose.yaml logs -f
 
 clean:
 	rm -rf server/gen .venv .pytest_cache __pycache__

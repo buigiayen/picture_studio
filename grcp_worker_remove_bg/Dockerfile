@@ -3,6 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     U2NET_HOME=/models \
+    ONNX_MODEL_CACHE_DIR=/models \
     GRPC_MAX_MESSAGE_SIZE=67108864
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
